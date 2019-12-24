@@ -107,7 +107,7 @@ status_t BubbleSort::StartSaver(BView* view, bool prev)
 void BubbleSort::GenerateArray()
 {
 	for (int i = 0; i < fWidth; i++)
-		fArr[i] = abs(random());
+		fArr[i] = (abs(random()) % fHeight + 1);
 }
 
 
