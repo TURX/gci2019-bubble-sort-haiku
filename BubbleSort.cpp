@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  * 
- * Copyright 2016, Adrien Destugues
+ * Copyright 2019, TURX
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -101,6 +101,8 @@ status_t BubbleSort::StartSaver(BView* view, bool prev)
 
 	_Restart(view);
 
+	SetTickSize(50000); // 0.05 sec
+
 	return B_OK;
 }
 
@@ -143,28 +145,40 @@ void BubbleSort::_Restart(BView* view)
 	view->BeginLineArray(fWidth);
 	for (int i = 0; i < fWidth; i++) {
 		view->AddLine(BPoint(i, 0), BPoint(i, fHeight), kBlackColor);
-		view->AddLine(BPoint(i, 0), BPoint(i, fArr[i]), somecolor());
+		view->AddLine(BPoint(i, fHeight - fArr[i]), BPoint(i, fHeight), somecolor());
 	}
 	view->EndLineArray();
 
-	Sort(view);
+	fI = 0;
+	fJ = 0;
 }
 
 
-void BubbleSort::Draw(BView* view, int32 change)
+void BubbleSort::Draw(BView* view, int32 frame)
 {
 	if (fNeedsRestart)
 		_Restart(view);
 
-	view->BeginLineArray(fWidth);
-	view->AddLine(BPoint(change, 0), BPoint(change, fHeight), kBlackColor);
-	view->AddLine(BPoint(change, 0), BPoint(change, fArr[change]), somecolor());
-	view->EndLineArray();
-}
+	if (fI >= fWidth) {
+		fNeedsRestart = true;
+		return;
+	} else
+		fI++;
 
+	if (fJ >= fWidth - fI)
+		fJ = 0;
+	else
+		fJ++;
 
-void BubbleSort::MessageReceived(BMessage* msg)
-{
+	if (fArr[fJ] > fArr[fJ + 1]) {
+		Swap(fArr[fJ], fArr[fJ + 1]);
+		view->BeginLineArray(fWidth);
+		view->AddLine(BPoint(fJ, 0), BPoint(fJ, fHeight), kBlackColor);
+		view->AddLine(BPoint(fJ, fHeight - fArr[fJ]), BPoint(fJ, fHeight), somecolor());
+		view->AddLine(BPoint(fJ + 1, 0), BPoint(fJ + 1, fHeight), kBlackColor);
+		view->AddLine(BPoint(fJ + 1, fHeight - fArr[fJ + 1]), BPoint(fJ + 1, fHeight), somecolor());
+		view->EndLineArray();
+	}
 }
 
 
@@ -173,26 +187,5 @@ void BubbleSort::Swap(int& i, int& j)
 	int t = i;
 	i = j;
 	j = t;
-}
-
-
-void BubbleSort::Sort(BView* view)
-{
-	int i, j;
-	bool swapped;
-	for (i = 0; i < fWidth; i++) {
-		swapped = false;
-		for (j = 0; j < fWidth - i; j++) {
-			if (fArr[j] > fArr[j + 1]) {
-				Swap(fArr[j], fArr[j + 1]);
-				Draw(view, j);
-				Draw(view, j + 1);
-				swapped = true;
-			}
-		}
-		if (swapped == false)
-			break;
-	}
-	fNeedsRestart = true;
 }
 

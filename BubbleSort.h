@@ -10,21 +10,20 @@ public:
 	virtual void		StartConfig(BView* view);
 
 	virtual status_t	StartSaver(BView* view, bool preview);
-	virtual void		Draw(BView* view, int32 change);
-
-	virtual void		MessageReceived(BMessage* msg);
-	virtual status_t	SaveState(BMessage* into) const;
+	virtual void		Draw(BView* view, int32 frame);
 
 private:
 	void	_Restart(BView* view);
 	void	Swap(int& i, int& j);
-	void	Sort(BView* view);
 	void	GenerateArray();
 
 	int		fWidth;
 	int		fHeight;
 
 	int*	fArr;
+
+	int		fI;
+	int		fJ;
 
 	bool	fNeedsRestart;
 };
