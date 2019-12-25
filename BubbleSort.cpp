@@ -40,6 +40,7 @@
 
 static const BString kName = "Bubble Sort";
 static const BString kAuthor = "TURX";
+static const rgb_color kBlackColor = { 0, 0, 0, 255 };
 
 
 extern "C" BScreenSaver*
@@ -95,8 +96,8 @@ status_t BubbleSort::StartSaver(BView* view, bool prev)
 	view->SetLineMode(B_ROUND_CAP, B_ROUND_JOIN);
 	view->SetFlags(view->Flags() | B_SUBPIXEL_PRECISE);
 
-	view->SetLowColor(make_color(0, 0, 0, 255));
-	view->SetViewColor(make_color(0, 0, 0, 255));
+	view->SetLowColor(kBlackColor);
+	view->SetViewColor(kBlackColor);
 
 	_Restart(view);
 
@@ -141,7 +142,7 @@ void BubbleSort::_Restart(BView* view)
 
 	view->BeginLineArray(fWidth);
 	for (int i = 0; i < fWidth; i++) {
-		view->AddLine(BPoint(i, 0), BPoint(i, fHeight), {0, 0, 0, 255});
+		view->AddLine(BPoint(i, 0), BPoint(i, fHeight), kBlackColor);
 		view->AddLine(BPoint(i, 0), BPoint(i, fArr[i]), somecolor());
 	}
 	view->EndLineArray();
@@ -156,7 +157,7 @@ void BubbleSort::Draw(BView* view, int32 change)
 		_Restart(view);
 
 	view->BeginLineArray(fWidth);
-	view->AddLine(BPoint(change, 0), BPoint(change, fHeight), {0, 0, 0, 255});
+	view->AddLine(BPoint(change, 0), BPoint(change, fHeight), kBlackColor);
 	view->AddLine(BPoint(change, 0), BPoint(change, fArr[change]), somecolor());
 	view->EndLineArray();
 }
