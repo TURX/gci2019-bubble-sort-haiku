@@ -41,6 +41,7 @@
 static const BString kName = "Bubble Sort";
 static const BString kAuthor = "TURX";
 static const rgb_color kBlackColor = { 0, 0, 0, 255 };
+static const rgb_color kWhiteColor = { 255, 255, 255, 255 };
 
 
 extern "C" BScreenSaver*
@@ -88,8 +89,8 @@ status_t BubbleSort::StartSaver(BView* view, bool prev)
 	srandom(time(NULL));
 
 	BRect rect = view->Bounds();
-	fWidth = (int) rect.Width() + 1;
-	fHeight = (int) rect.Height() + 1;
+	fWidth = rect.IntegerWidth();
+	fHeight = rect.IntegerHeight();
 	int arr[fWidth];
 	fArr = arr;
 
@@ -98,10 +99,11 @@ status_t BubbleSort::StartSaver(BView* view, bool prev)
 
 	view->SetLowColor(kBlackColor);
 	view->SetViewColor(kBlackColor);
+	view->SetHighColor(kWhiteColor);
 
 	_Restart(view);
 
-	SetTickSize(50000); // 0.05 sec
+	SetTickSize(500); // 0.0005 sec
 
 	return B_OK;
 }
@@ -114,43 +116,17 @@ void BubbleSort::GenerateArray()
 }
 
 
-rgb_color somecolor()
-{
-  // pick some random good color
-
-	static const rgb_color goodcolor[] = {
-		{ 0, 0, 255, 255 },
-		{ 0, 255, 255, 255 },
-		{ 255, 0, 255, 255 },
-		{ 0, 255, 0, 255 },
-		{ 255, 0, 0, 255 },
-		{ 255, 255, 0, 255 },
-		{ 255, 255, 255, 255 }
-	};
-
-  return goodcolor[random() % ARRAY_SIZE(goodcolor)];
-}
-
-
 void BubbleSort::_Restart(BView* view)
 {
 	fNeedsRestart = false;
 
 	view->SetDrawingMode(B_OP_COPY);
 	view->FillRect(view->Bounds(), B_SOLID_LOW);
-	view->SetDrawingMode(B_OP_ALPHA);
 
 	GenerateArray();
 
-	view->BeginLineArray(fWidth);
-	for (int i = 0; i < fWidth; i++) {
-		view->AddLine(BPoint(i, 0), BPoint(i, fHeight), kBlackColor);
-		view->AddLine(BPoint(i, fHeight - fArr[i]), BPoint(i, fHeight), somecolor());
-	}
-	view->EndLineArray();
-
 	fI = 0;
-	fJ = 0;
+	fL = fWidth - 1;
 }
 
 
@@ -159,33 +135,27 @@ void BubbleSort::Draw(BView* view, int32 frame)
 	if (fNeedsRestart)
 		_Restart(view);
 
-	if (fI >= fWidth) {
+	if (fI >= fL) {
 		fNeedsRestart = true;
 		return;
 	} else
 		fI++;
 
-	if (fJ >= fWidth - fI)
-		fJ = 0;
-	else
-		fJ++;
-
-	if (fArr[fJ] > fArr[fJ + 1]) {
-		Swap(fArr[fJ], fArr[fJ + 1]);
-		view->BeginLineArray(fWidth);
-		view->AddLine(BPoint(fJ, 0), BPoint(fJ, fHeight), kBlackColor);
-		view->AddLine(BPoint(fJ, fHeight - fArr[fJ]), BPoint(fJ, fHeight), somecolor());
-		view->AddLine(BPoint(fJ + 1, 0), BPoint(fJ + 1, fHeight), kBlackColor);
-		view->AddLine(BPoint(fJ + 1, fHeight - fArr[fJ + 1]), BPoint(fJ + 1, fHeight), somecolor());
+	if (fArr[fI] > fArr[fI + 1]) {
+		int tmp = fArr[fI];
+		fArr[fI] = fArr[fI + 1];
+		fArr[fI + 1] = tmp;
+		view->BeginLineArray(4);
+		view->AddLine(BPoint(fI, 0), BPoint(fI, fHeight), kBlackColor);
+		view->AddLine(BPoint(fI, fHeight - fArr[fI]), BPoint(fI, fHeight), kWhiteColor);
+		view->AddLine(BPoint(fI + 1, 0), BPoint(fI + 1, fHeight), kBlackColor);
+		view->AddLine(BPoint(fI + 1, fHeight - fArr[fI + 1]), BPoint(fI + 1, fHeight), kWhiteColor);
 		view->EndLineArray();
 	}
-}
 
-
-void BubbleSort::Swap(int& i, int& j)
-{
-	int t = i;
-	i = j;
-	j = t;
+	if (fI == fL - 1) {
+		fI = 0;
+		fL--;
+	}
 }
 

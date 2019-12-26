@@ -23,7 +23,7 @@ private:
 	int*	fArr;
 
 	int		fI;
-	int		fJ;
+	int		fL;
 
 	bool	fNeedsRestart;
 };
