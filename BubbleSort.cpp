@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  * 
- * Copyright 2019, TURX
+ * Copyright 2019, Ruixuan Tu
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@
 	(sizeof(a) / sizeof(a[0]))
 
 static const BString kName = "Bubble Sort";
-static const BString kAuthor = "TURX";
+static const BString kAuthor = "Ruixuan Tu";
 static const rgb_color kBlackColor = { 0, 0, 0, 255 };
 static const rgb_color kWhiteColor = { 255, 255, 255, 255 };
 
@@ -71,7 +71,7 @@ void BubbleSort::StartConfig(BView* view)
 
 	BStringView* v1 = new BStringView("name", "Bubble Sort");
 	v1->SetFont(be_bold_font);
-	BStringView* v2 = new BStringView("author", "by TURX");
+	BStringView* v2 = new BStringView("author", "by Ruixuan Tu");
 
 	BLayoutBuilder::Group<>(view, B_VERTICAL, B_USE_ITEM_SPACING)
 		.SetInsets(B_USE_WINDOW_INSETS)
