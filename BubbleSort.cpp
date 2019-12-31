@@ -42,6 +42,7 @@ static const BString kName = "Bubble Sort";
 static const BString kAuthor = "Ruixuan Tu";
 static const rgb_color kBlackColor = { 0, 0, 0, 255 };
 static const rgb_color kWhiteColor = { 255, 255, 255, 255 };
+static const int kPenSize = 5;
 
 
 extern "C" BScreenSaver*
@@ -91,17 +92,16 @@ status_t BubbleSort::StartSaver(BView* view, bool prev)
 	BRect rect = view->Bounds();
 	fWidth = rect.IntegerWidth();
 	fHeight = rect.IntegerHeight();
-	int arr[fWidth / 5];
+	int arr[fWidth / kPenSize];
 	fArr = arr;
 
 	view->SetLineMode(B_ROUND_CAP, B_ROUND_JOIN);
-	view->SetFlags(view->Flags() | B_SUBPIXEL_PRECISE);
 
 	view->SetLowColor(kBlackColor);
 	view->SetViewColor(kBlackColor);
 	view->SetHighColor(kWhiteColor);
 
-	view->SetPenSize(5);
+	view->SetPenSize(kPenSize - 1);
 
 	_Restart(view);
 
@@ -113,7 +113,7 @@ status_t BubbleSort::StartSaver(BView* view, bool prev)
 
 void BubbleSort::GenerateArray()
 {
-	for (int i = 0; i < fWidth / 5; i++)
+	for (int i = 0; i < fWidth / kPenSize; i++)
 		fArr[i] = abs(random()) % fHeight;
 }
 
@@ -126,11 +126,11 @@ void BubbleSort::_Restart(BView* view)
 
 	GenerateArray();
 
-	for (int i = 0; i <= fWidth / 5; i++)
-		view->StrokeLine(BPoint(i * 5, fHeight - fArr[i]), BPoint(i * 5, fHeight), B_SOLID_HIGH);
+	for (int i = 0; i <= fWidth / kPenSize; i++)
+		view->StrokeLine(BPoint(i * kPenSize, fHeight - fArr[i]), BPoint(i * kPenSize, fHeight), B_SOLID_HIGH);
 
 	fI = 0;
-	fL = fWidth / 5;
+	fL = fWidth / kPenSize;
 }
 
 
@@ -149,12 +149,10 @@ void BubbleSort::Draw(BView* view, int32 frame)
 		int tmp = fArr[fI];
 		fArr[fI] = fArr[fI + 1];
 		fArr[fI + 1] = tmp;
-		view->BeginLineArray(2);
-		view->AddLine(BPoint(fI * 5, 0), BPoint(fI * 5, fHeight), kBlackColor);
-		view->AddLine(BPoint((fI + 1) * 5, 0), BPoint((fI + 1) * 5, fHeight), kBlackColor);
-		view->EndLineArray();
-		view->StrokeLine(BPoint(fI * 5, fHeight - fArr[fI]), BPoint(fI * 5, fHeight), B_SOLID_HIGH);
-		view->StrokeLine(BPoint((fI + 1) * 5, fHeight - fArr[fI + 1]), BPoint((fI + 1) * 5, fHeight), B_SOLID_HIGH);
+		view->StrokeLine(BPoint(fI * kPenSize, 0), BPoint(fI * kPenSize, fHeight), B_SOLID_LOW);
+		view->StrokeLine(BPoint(fI * kPenSize, fHeight - fArr[fI]), BPoint(fI * kPenSize, fHeight), B_SOLID_HIGH);
+		view->StrokeLine(BPoint((fI + 1) * kPenSize, 0), BPoint((fI + 1) * kPenSize, fHeight), B_SOLID_LOW);
+		view->StrokeLine(BPoint((fI + 1) * kPenSize, fHeight - fArr[fI + 1]), BPoint((fI + 1) * kPenSize, fHeight), B_SOLID_HIGH);
 	}
 
 	if (fI == fL - 1) {
