@@ -133,7 +133,6 @@ void BubbleSort::MessageReceived(BMessage* message)
 			if (message->FindInt32("be:value", &speed) == B_OK)
 				fSpeed = speed;
 			break;
-			// fSpeed = fSpeedS->Value();
 
 		default:
 			BHandler::MessageReceived(message);
