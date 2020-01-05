@@ -1,6 +1,6 @@
-#include <Handler.h>
 #include <ScreenSaver.h>
-#include <ObjectList.h>
+
+class BSlider;
 
 class BubbleSort : public BScreenSaver, public BHandler {
 public:
@@ -8,23 +8,28 @@ public:
 						~BubbleSort();
 
 	virtual void		StartConfig(BView* view);
+	virtual	status_t	SaveState(BMessage* into) const;
+	virtual	void		MessageReceived(BMessage* message);
 
 	virtual status_t	StartSaver(BView* view, bool preview);
 	virtual void		Draw(BView* view, int32 frame);
 
 private:
-	void	_Restart(BView* view);
-	void	Swap(int& i, int& j);
-	void	GenerateArray();
+	void		_Restart(BView* view);
+	void		Swap(int& i, int& j);
+	void		GenerateArray();
 
-	int		fWidth;
-	int		fHeight;
+	int			fWidth;
+	int			fHeight;
 
-	int*	fArr;
+	int*		fArr;
 
-	int		fI;
-	int		fL;
+	int			fI;
+	int			fL;
 
-	bool	fNeedsRestart;
+	bool		fNeedsRestart;
+
+	BSlider*	fSpeedS;
+	int			fSpeed;
 };
 

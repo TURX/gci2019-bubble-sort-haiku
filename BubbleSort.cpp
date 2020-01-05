@@ -1,7 +1,7 @@
 /* 
  * The MIT License (MIT)
  * 
- * Copyright 2019, Ruixuan Tu
+ * Copyright 2019-2020, Ruixuan Tu
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,12 +27,9 @@
 #include <math.h>
 #include <stdlib.h>
 
-#include <Alignment.h>
-#include <Button.h>
-#include <LayoutBuilder.h>
 #include <Slider.h>
 #include <String.h>
-#include <StringView.h>
+#include <TextView.h>
 #include <Window.h>
 
 #define ARRAY_SIZE(a) \
@@ -43,6 +40,7 @@ static const BString kAuthor = "Ruixuan Tu";
 static const rgb_color kBlackColor = { 0, 0, 0, 255 };
 static const rgb_color kWhiteColor = { 255, 255, 255, 255 };
 static const int kPenSize = 5;
+static const uint32 kMsgSetSpeed = 'stsp';
 
 
 extern "C" BScreenSaver*
@@ -54,8 +52,12 @@ instantiate_screen_saver(BMessage* msg, image_id id)
 
 BubbleSort::BubbleSort(BMessage* archive, image_id id)
 	:
-	BScreenSaver(archive, id)
+	BScreenSaver(archive, id),
+	fSpeed(5)
 {
+	if (archive)
+		if (archive->FindInt32("BubbleSort speed", &fSpeed) != B_OK)
+			fSpeed = 5;
 }
 
 
@@ -66,22 +68,76 @@ BubbleSort::~BubbleSort()
 
 void BubbleSort::StartConfig(BView* view)
 {
-	BWindow* win = view->Window();
-	if (win)
-		win->AddHandler(this);
 
-	BStringView* v1 = new BStringView("name", "Bubble Sort");
-	v1->SetFont(be_bold_font);
-	BStringView* v2 = new BStringView("author", "by Ruixuan Tu");
+	BRect bounds = view->Bounds();
+	bounds.InsetBy(10, 10);
+	BRect frame(0, 0, bounds.Width(), 20);
 
-	BLayoutBuilder::Group<>(view, B_VERTICAL, B_USE_ITEM_SPACING)
-		.SetInsets(B_USE_WINDOW_INSETS)
-		.SetExplicitAlignment(BAlignment(B_ALIGN_HORIZONTAL_CENTER, B_ALIGN_TOP))
-		.AddGroup(B_HORIZONTAL)
-			.Add(v1)
-			.Add(v2)
-			.AddGlue()
-		.End();
+	fSpeedS = new BSlider(frame, "speed setting",
+		"Speed:", new BMessage(kMsgSetSpeed), 1, 10,
+		B_BLOCK_THUMB, B_FOLLOW_LEFT_RIGHT | B_FOLLOW_BOTTOM);
+
+	fSpeedS->SetValue(fSpeed);
+	fSpeedS->SetHashMarks(B_HASH_MARKS_BOTTOM);
+	fSpeedS->SetHashMarkCount(10);
+
+	fSpeedS->ResizeToPreferred();
+	bounds.bottom -= fSpeedS->Bounds().Height() * 1.5;
+	fSpeedS->MoveTo(bounds.LeftBottom());
+
+	view->AddChild(fSpeedS);
+
+	BRect textRect = bounds;
+	textRect.OffsetTo(0, 0);
+	BTextView* textView = new BTextView(bounds, B_EMPTY_STRING, textRect,
+		B_FOLLOW_ALL, B_WILL_DRAW);
+	textView->SetViewColor(view->ViewColor());
+
+	BString aboutScreenSaver("%screenSaverName%\n\n"
+		B_UTF8_COPYRIGHT " 2019-2020 Ruixuan Tu <turx2003@gmail.com>");
+	BString screenSaverName("Bubble Sort ScreenSaver");
+
+	aboutScreenSaver.ReplaceFirst("%screenSaverName%", screenSaverName);
+	textView->Insert(aboutScreenSaver);
+
+	textView->SetStylable(true);
+	textView->SetFontAndColor(0, screenSaverName.Length(), be_bold_font);
+
+	textView->MakeEditable(false);
+
+	view->AddChild(textView);
+
+	if (BWindow* window = view->Window())
+		window->AddHandler(this);
+
+	fSpeedS->SetTarget(this);
+}
+
+
+status_t BubbleSort::SaveState(BMessage* into) const
+{
+	status_t status;
+
+	if ((status = into->AddInt32("BubbleSort speed", fSpeed)) != B_OK)
+		return status;
+
+	return B_OK;
+}
+
+
+void BubbleSort::MessageReceived(BMessage* message)
+{
+	switch (message->what) {
+		case kMsgSetSpeed:
+			int speed;
+			if (message->FindInt32("be:value", &speed) == B_OK)
+				fSpeed = speed;
+			break;
+			// fSpeed = fSpeedS->Value();
+
+		default:
+			BHandler::MessageReceived(message);
+	}
 }
 
 
@@ -105,7 +161,7 @@ status_t BubbleSort::StartSaver(BView* view, bool prev)
 
 	_Restart(view);
 
-	SetTickSize(50000); // 0.05 sec
+	SetTickSize(100000 / fSpeed); // default: 50000 - 0.05 sec
 
 	return B_OK;
 }
