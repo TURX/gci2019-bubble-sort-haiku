@@ -1,11 +1,13 @@
 #include <ScreenSaver.h>
 
 class BSlider;
+class BMenuField;
+class BMenuItem;
 
-class BubbleSort : public BScreenSaver, public BHandler {
+class Sort : public BScreenSaver, public BHandler {
 public:
-						BubbleSort(BMessage* archive, image_id id);
-						~BubbleSort();
+						Sort(BMessage* archive, image_id id);
+						~Sort();
 
 	virtual void		StartConfig(BView* view);
 	virtual	status_t	SaveState(BMessage* into) const;
@@ -19,6 +21,9 @@ private:
 	void		Swap(int& i, int& j);
 	void		GenerateArray();
 
+	void		BubbleSort(BView* view, int32 frame);
+	void		InsertionSort(BView* view, int32 frame);
+
 	int			fWidth;
 	int			fHeight;
 
@@ -26,10 +31,15 @@ private:
 
 	int			fI;
 	int			fL;
+	int			fKey;
 
 	bool		fNeedsRestart;
+	bool		fNeedsDraw;
 
 	BSlider*	fSpeedS;
 	int			fSpeed;
+
+	BMenuField*	fTypeMenuField;
+	int			fType;
 };
 

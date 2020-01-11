@@ -5,7 +5,7 @@
 ## architecture of Haiku.
 
 # The name of the binary.
-NAME = Bubble\ Sort
+NAME = Sort
 
 # The type of binary, must be one of:
 #	APP:	Application
@@ -28,7 +28,7 @@ APP_MIME_SIG =
 #	means this Makefile will not work correctly if two source files with the
 #	same name (source.c or source.cpp) are included from different directories.
 #	Also note that spaces in folder names do not work well with this Makefile.
-SRCS = BubbleSort.cpp
+SRCS = Sort.cpp
 
 ## Installation directory
 INSTALL_DIR = /boot/system/non-packaged/add-ons/Screen\ Savers/
