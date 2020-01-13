@@ -3,6 +3,7 @@
 class BSlider;
 class BMenuField;
 class BMenuItem;
+class BRadioButton;
 
 class Sort : public BScreenSaver, public BHandler {
 public:
@@ -17,29 +18,33 @@ public:
 	virtual void		Draw(BView* view, int32 frame);
 
 private:
-	void		_Restart(BView* view);
-	void		Swap(int& i, int& j);
-	void		GenerateArray();
+	void			_Restart(BView* view);
+	void			Swap(int& i, int& j);
+	void			GenerateArray();
 
-	void		BubbleSort(BView* view, int32 frame);
-	void		InsertionSort(BView* view, int32 frame);
+	void			BubbleSort(BView* view, int32 frame);
+	void			InsertionSort(BView* view, int32 frame);
+	void			SelectionSort(BView* view, int32 frame);
 
-	int			fWidth;
-	int			fHeight;
+	int				fWidth;
+	int				fHeight;
 
-	int*		fArr;
+	int*			fArr;
 
-	int			fI;
-	int			fL;
-	int			fKey;
+	int				fI;
+	int				fJ;
+	int				fK;
+	int				fL;
 
-	bool		fNeedsRestart;
-	bool		fNeedsDraw;
+	bool			fNeedsRestart;
+	bool			fNeedsDraw;
 
-	BSlider*	fSpeedS;
-	int			fSpeed;
+	BSlider*		fSpeedS;
+	int				fSpeed;
 
-	BMenuField*	fTypeMenuField;
-	int			fType;
+	BRadioButton*	fRadioTypeB;
+	BRadioButton*	fRadioTypeI;
+	BRadioButton*	fRadioTypeS;
+	int				fType;
 };
 

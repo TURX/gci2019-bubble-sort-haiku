@@ -29,8 +29,8 @@
 #include <stdio.h>
 
 #include <InterfaceKit.h>
-#include <MenuField.h>
 #include <PopUpMenu.h>
+#include <RadioButton.h>
 #include <Slider.h>
 #include <String.h>
 #include <TextView.h>
@@ -45,11 +45,14 @@ static const rgb_color kBlackColor = { 0, 0, 0, 255 };
 static const rgb_color kWhiteColor = { 255, 255, 255, 255 };
 static const int kPenSize = 5;
 static const uint32 kMsgSetSpeed = 'stsp';
-static const uint32 kMsgSetType = 'sttp';
+static const uint32 kMsgSetTypeBubble = 'sttb';
+static const uint32 kMsgSetTypeInsertion = 'stti';
+static const uint32 kMsgSetTypeSelection = 'stts';
 
 enum {
 	TYPE_BUBBLE = 1,
-	TYPE_INSERTION = 2
+	TYPE_INSERTION = 2,
+	TYPE_SELECTION = 3
 };
 
 
@@ -100,31 +103,39 @@ void Sort::StartConfig(BView* view)
 
 	view->AddChild(fSpeedS);
 
-	BPopUpMenu* popUpMenu = new BPopUpMenu("");
-	BString label;
+	fRadioTypeB = new BRadioButton("Bubble Sort", new BMessage(kMsgSetTypeBubble));
+	fRadioTypeI = new BRadioButton("Insertion Sort", new BMessage(kMsgSetTypeInsertion));
+	fRadioTypeS = new BRadioButton("Selection Sort", new BMessage(kMsgSetTypeSelection));
 
-	label.SetTo("Bubble Sort");
-	BMessage* message1 = new BMessage(kMsgSetType);
-	message1->AddInt32("type", TYPE_BUBBLE);
-	const char* l1 = label.String();
-	BMenuItem* item1 = new BMenuItem(l1, message1);
-	popUpMenu->AddItem(item1);
-	item1->SetMarked(fType == TYPE_BUBBLE);
+	switch (fType) {
+		case TYPE_BUBBLE:
+			fRadioTypeB->SetValue(B_CONTROL_ON);
+			break;
 
-	label.SetTo("Insertion Sort");
-	BMessage* message2 = new BMessage(kMsgSetType);
-	message2->AddInt32("type", TYPE_INSERTION);
-	const char* l2 = label.String();
-	BMenuItem* item2 = new BMenuItem(l2, message2);
-	popUpMenu->AddItem(item2);
-	item2->SetMarked(fType == TYPE_INSERTION);
+		case TYPE_INSERTION:
+			fRadioTypeI->SetValue(B_CONTROL_ON);
+			break;
 
-	fTypeMenuField = new BMenuField("type setting", "Sort type:", popUpMenu);
-	fTypeMenuField->ResizeToPreferred();
-	bounds.bottom -= fTypeMenuField->Bounds().Height() * 1.5;
-	fTypeMenuField->MoveTo(bounds.LeftBottom());
+		case TYPE_SELECTION:
+			fRadioTypeS->SetValue(B_CONTROL_ON);
+			break;
+	}
 
-	view->AddChild(fTypeMenuField);
+	fRadioTypeS->ResizeToPreferred();
+	bounds.bottom -= fRadioTypeS->Bounds().Height() * 1.5;
+	fRadioTypeS->MoveTo(bounds.LeftBottom());
+
+	fRadioTypeI->ResizeToPreferred();
+	bounds.bottom -= fRadioTypeI->Bounds().Height() * 1.5;
+	fRadioTypeI->MoveTo(bounds.LeftBottom());
+
+	fRadioTypeB->ResizeToPreferred();
+	bounds.bottom -= fRadioTypeB->Bounds().Height() * 1.5;
+	fRadioTypeB->MoveTo(bounds.LeftBottom());
+
+	view->AddChild(fRadioTypeB);
+	view->AddChild(fRadioTypeI);
+	view->AddChild(fRadioTypeS);
 
 	BRect textRect = bounds;
 	textRect.OffsetTo(0, 0);
@@ -149,7 +160,9 @@ void Sort::StartConfig(BView* view)
 	if (BWindow* window = view->Window())
 		window->AddHandler(this);
 
-	fTypeMenuField->Menu()->SetTargetForItems(this);
+	fRadioTypeB->SetTarget(this);
+	fRadioTypeI->SetTarget(this);
+	fRadioTypeS->SetTarget(this);
 	fSpeedS->SetTarget(this);
 }
 
@@ -172,19 +185,25 @@ void Sort::MessageReceived(BMessage* message)
 {
 	switch (message->what) {
 		case kMsgSetSpeed:
+			fNeedsRestart = true;
 			int speed;
 			if (message->FindInt32("be:value", &speed) == B_OK)
 				fSpeed = speed;
 			break;
 		
-		case kMsgSetType:
-			int type;
-			if (message->FindInt32("be:value", &type) == B_OK) {
-				for (int i = 0; i < 1; i++) printf("msg set type info: %d %d\n", fType, type);
-				fType = type;
-			} else {
-				for (int i = 0; i < 1; i++) printf("msg set type err\n");
-			}
+		case kMsgSetTypeBubble:
+			fNeedsRestart = true;
+			fType = TYPE_BUBBLE;
+			break;
+
+		case kMsgSetTypeInsertion:
+			fNeedsRestart = true;
+			fType = TYPE_INSERTION;
+			break;
+
+		case kMsgSetTypeSelection:
+			fNeedsRestart = true;
+			fType = TYPE_SELECTION;
 			break;
 
 		default:
@@ -234,16 +253,24 @@ void Sort::_Restart(BView* view)
 
 	GenerateArray();
 
+	fL = -1;
+
 	switch (fType) {
 		case TYPE_BUBBLE:
 			fI = 0;
-			fL = fWidth / kPenSize;
+			fJ = fWidth / kPenSize;
 			break;
 
 		case TYPE_INSERTION:
 			fI = 1;
-			fKey = fArr[fI];
-			fL = fI - 1;
+			fK = fArr[fI];
+			fJ = fI - 1;
+			break;
+
+		case TYPE_SELECTION:
+			fI = 0;
+			fK = 0;
+			fJ = 1;
 			break;
 	}
 
@@ -272,30 +299,40 @@ void Sort::Draw(BView* view, int32 frame)
 		case TYPE_INSERTION:
 			InsertionSort(view, frame);
 			break;
+
+		case TYPE_SELECTION:
+			SelectionSort(view, frame);
+			break;
 	}
 }
 
 
 void Sort::BubbleSort(BView* view, int32 frame) {
-	if (fI >= fL) {
+	if (fI >= fJ) {
 		fNeedsRestart = true;
 		return;
 	} else
 		fI++;
+	
+	if (fL != -1) {
+		view->StrokeLine(BPoint(fL * kPenSize, fHeight - fArr[fL]), BPoint(fL * kPenSize, fHeight), B_SOLID_HIGH);
+		view->StrokeLine(BPoint((fL + 1) * kPenSize, fHeight - fArr[fL + 1]), BPoint((fL + 1) * kPenSize, fHeight), B_SOLID_HIGH);
+	}
 
 	if (fArr[fI] > fArr[fI + 1]) {
 		int tmp = fArr[fI];
 		fArr[fI] = fArr[fI + 1];
 		fArr[fI + 1] = tmp;
 		view->StrokeLine(BPoint(fI * kPenSize, 0), BPoint(fI * kPenSize, fHeight), B_SOLID_LOW);
-		view->StrokeLine(BPoint(fI * kPenSize, fHeight - fArr[fI]), BPoint(fI * kPenSize, fHeight), B_SOLID_HIGH);
+		view->StrokeLine(BPoint(fI * kPenSize, fHeight - fArr[fI]), BPoint(fI * kPenSize, fHeight), B_MIXED_COLORS);
 		view->StrokeLine(BPoint((fI + 1) * kPenSize, 0), BPoint((fI + 1) * kPenSize, fHeight), B_SOLID_LOW);
-		view->StrokeLine(BPoint((fI + 1) * kPenSize, fHeight - fArr[fI + 1]), BPoint((fI + 1) * kPenSize, fHeight), B_SOLID_HIGH);
+		view->StrokeLine(BPoint((fI + 1) * kPenSize, fHeight - fArr[fI + 1]), BPoint((fI + 1) * kPenSize, fHeight), B_MIXED_COLORS);
+		fL = fI;
 	}
 
-	if (fI == fL - 1) {
+	if (fI == fJ - 1) {
 		fI = -1;
-		fL--;
+		fJ--;
 	}
 }
 
@@ -306,18 +343,51 @@ void Sort::InsertionSort(BView* view, int32 frame) {
 		return;
 	}
 
-	if (fL >= 0 && fArr[fL] > fKey) {
-		fArr[fL + 1] = fArr[fL];
-		fL = fL - 1;
-		view->StrokeLine(BPoint((fL + 1) * kPenSize, 0), BPoint((fL + 1) * kPenSize, fHeight), B_SOLID_LOW);
-		view->StrokeLine(BPoint((fL + 1) * kPenSize, fHeight - fArr[fL + 1]), BPoint((fL + 1) * kPenSize, fHeight), B_SOLID_HIGH);
+	if (fL != -1)
+		view->StrokeLine(BPoint(fL * kPenSize, fHeight - fArr[fL]), BPoint(fL * kPenSize, fHeight), B_SOLID_HIGH);
+
+	if (fJ >= 0 && fArr[fJ] > fK) {
+		fArr[fJ + 1] = fArr[fJ];
+		view->StrokeLine(BPoint((fJ + 1) * kPenSize, 0), BPoint((fJ + 1) * kPenSize, fHeight), B_SOLID_LOW);
+		view->StrokeLine(BPoint((fJ + 1) * kPenSize, fHeight - fArr[fJ + 1]), BPoint((fJ + 1) * kPenSize, fHeight), B_MIXED_COLORS);
+		fL = fJ + 1;
+		fJ--;
 	} else {
-		fArr[fL + 1] = fKey;
-		view->StrokeLine(BPoint((fL + 1) * kPenSize, 0), BPoint((fL + 1) * kPenSize, fHeight), B_SOLID_LOW);
-		view->StrokeLine(BPoint((fL + 1) * kPenSize, fHeight - fArr[fL + 1]), BPoint((fL + 1) * kPenSize, fHeight), B_SOLID_HIGH);
-		fKey = fArr[fI];
-		fL = fI - 1;
+		fArr[fJ + 1] = fK;
+		view->StrokeLine(BPoint((fJ + 1) * kPenSize, 0), BPoint((fJ + 1) * kPenSize, fHeight), B_SOLID_LOW);
+		view->StrokeLine(BPoint((fJ + 1) * kPenSize, fHeight - fArr[fJ + 1]), BPoint((fJ + 1) * kPenSize, fHeight), B_MIXED_COLORS);
+		fL = fJ + 1;
+		fK = fArr[fI];
+		fJ = fI - 1;
 		fI++;
+	}
+}
+
+
+void Sort::SelectionSort(BView* view, int32 frame) {
+	if (fI >= fWidth / kPenSize - 1) {
+		fNeedsRestart = true;
+		return;
+	}
+
+	if (fJ < fWidth / kPenSize) {
+		if (fL != -1)
+			view->StrokeLine(BPoint(fL * kPenSize, fHeight - fArr[fL]), BPoint(fL * kPenSize, fHeight), B_SOLID_HIGH);
+		view->StrokeLine(BPoint(fJ * kPenSize, fHeight - fArr[fJ]), BPoint(fJ * kPenSize, fHeight), B_MIXED_COLORS);
+		fL = fJ;
+		if (fArr[fJ] < fArr[fK])
+			fK = fJ;
+		fJ++;
+	} else {
+		fK = fI;
+		int tmp = fArr[fK];
+		fArr[fK] = fArr[fI];
+		fArr[fI] = tmp;
+		view->StrokeLine(BPoint(fI * kPenSize, 0), BPoint(fI * kPenSize, fHeight), B_SOLID_LOW);
+		view->StrokeLine(BPoint(fI * kPenSize, fHeight - fArr[fI]), BPoint(fI * kPenSize, fHeight), B_SOLID_HIGH);
+		view->StrokeLine(BPoint(fK * kPenSize, 0), BPoint(fK * kPenSize, fHeight), B_SOLID_LOW);
+		view->StrokeLine(BPoint(fK * kPenSize, fHeight - fArr[fK]), BPoint(fK * kPenSize, fHeight), B_SOLID_HIGH);
+		fJ = fI + 1;
 	}
 }
 
