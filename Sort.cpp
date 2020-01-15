@@ -43,6 +43,7 @@ static const BString kName = "Sort ScreenSaver";
 static const BString kAuthor = "Ruixuan Tu";
 static const rgb_color kBlackColor = { 0, 0, 0, 255 };
 static const rgb_color kWhiteColor = { 255, 255, 255, 255 };
+static const rgb_color kLightColor = { 255, 220, 50, 255 };
 static const int kPenSize = 5;
 static const uint32 kMsgSetSpeed = 'stsp';
 static const uint32 kMsgSetTypeBubble = 'sttb';
@@ -241,7 +242,7 @@ status_t Sort::StartSaver(BView* view, bool prev)
 void Sort::GenerateArray()
 {
 	for (int i = 0; i < fWidth / kPenSize; i++)
-		fArr[i] = abs(random()) % fHeight;
+		fArr[i] = abs(random()) % (fHeight - 2) + 1;
 }
 
 
@@ -286,9 +287,10 @@ void Sort::Draw(BView* view, int32 frame)
 	if (fNeedsDraw) {
 		view->BeginLineArray(fWidth / kPenSize);
 		for (int i = 0; i <= fWidth / kPenSize; i++)
-			view->AddLine(BPoint(i * kPenSize, fHeight - fArr[i]), BPoint(i * kPenSize, fHeight), {255, 255, 255});
+			view->AddLine(BPoint(i * kPenSize, fHeight - fArr[i]), BPoint(i * kPenSize, fHeight), kWhiteColor);
 		view->EndLineArray();
 		fNeedsDraw = false;
+		return;
 	}
 
 	switch (fType) {
@@ -315,18 +317,22 @@ void Sort::BubbleSort(BView* view, int32 frame) {
 		fI++;
 	
 	if (fL != -1) {
-		view->StrokeLine(BPoint(fL * kPenSize, fHeight - fArr[fL]), BPoint(fL * kPenSize, fHeight), B_SOLID_HIGH);
-		view->StrokeLine(BPoint((fL + 1) * kPenSize, fHeight - fArr[fL + 1]), BPoint((fL + 1) * kPenSize, fHeight), B_SOLID_HIGH);
+		view->BeginLineArray(2);
+		view->AddLine(BPoint(fL * kPenSize, fHeight - fArr[fL]), BPoint(fL * kPenSize, fHeight), kWhiteColor);
+		view->AddLine(BPoint((fL + 1) * kPenSize, fHeight - fArr[fL + 1]), BPoint((fL + 1) * kPenSize, fHeight), kWhiteColor);
+		view->EndLineArray();
 	}
 
 	if (fArr[fI] > fArr[fI + 1]) {
 		int tmp = fArr[fI];
 		fArr[fI] = fArr[fI + 1];
 		fArr[fI + 1] = tmp;
-		view->StrokeLine(BPoint(fI * kPenSize, 0), BPoint(fI * kPenSize, fHeight), B_SOLID_LOW);
-		view->StrokeLine(BPoint(fI * kPenSize, fHeight - fArr[fI]), BPoint(fI * kPenSize, fHeight), B_MIXED_COLORS);
-		view->StrokeLine(BPoint((fI + 1) * kPenSize, 0), BPoint((fI + 1) * kPenSize, fHeight), B_SOLID_LOW);
-		view->StrokeLine(BPoint((fI + 1) * kPenSize, fHeight - fArr[fI + 1]), BPoint((fI + 1) * kPenSize, fHeight), B_MIXED_COLORS);
+		view->BeginLineArray(4);
+		view->AddLine(BPoint(fI * kPenSize, 0), BPoint(fI * kPenSize, fHeight), kBlackColor);
+		view->AddLine(BPoint(fI * kPenSize, fHeight - fArr[fI]), BPoint(fI * kPenSize, fHeight), kLightColor);
+		view->AddLine(BPoint((fI + 1) * kPenSize, 0), BPoint((fI + 1) * kPenSize, fHeight), kBlackColor);
+		view->AddLine(BPoint((fI + 1) * kPenSize, fHeight - fArr[fI + 1]), BPoint((fI + 1) * kPenSize, fHeight), kLightColor);
+		view->EndLineArray();
 		fL = fI;
 	}
 
@@ -343,19 +349,26 @@ void Sort::InsertionSort(BView* view, int32 frame) {
 		return;
 	}
 
-	if (fL != -1)
-		view->StrokeLine(BPoint(fL * kPenSize, fHeight - fArr[fL]), BPoint(fL * kPenSize, fHeight), B_SOLID_HIGH);
+	if (fL != -1) {
+		view->BeginLineArray(1);
+		view->AddLine(BPoint(fL * kPenSize, fHeight - fArr[fL]), BPoint(fL * kPenSize, fHeight), kWhiteColor);
+		view->EndLineArray();
+	}
 
 	if (fJ >= 0 && fArr[fJ] > fK) {
 		fArr[fJ + 1] = fArr[fJ];
-		view->StrokeLine(BPoint((fJ + 1) * kPenSize, 0), BPoint((fJ + 1) * kPenSize, fHeight), B_SOLID_LOW);
-		view->StrokeLine(BPoint((fJ + 1) * kPenSize, fHeight - fArr[fJ + 1]), BPoint((fJ + 1) * kPenSize, fHeight), B_MIXED_COLORS);
+		view->BeginLineArray(2);
+		view->AddLine(BPoint((fJ + 1) * kPenSize, 0), BPoint((fJ + 1) * kPenSize, fHeight), kBlackColor);
+		view->AddLine(BPoint((fJ + 1) * kPenSize, fHeight - fArr[fJ + 1]), BPoint((fJ + 1) * kPenSize, fHeight), kLightColor);
+		view->EndLineArray();
 		fL = fJ + 1;
 		fJ--;
 	} else {
 		fArr[fJ + 1] = fK;
-		view->StrokeLine(BPoint((fJ + 1) * kPenSize, 0), BPoint((fJ + 1) * kPenSize, fHeight), B_SOLID_LOW);
-		view->StrokeLine(BPoint((fJ + 1) * kPenSize, fHeight - fArr[fJ + 1]), BPoint((fJ + 1) * kPenSize, fHeight), B_MIXED_COLORS);
+		view->BeginLineArray(2);
+		view->AddLine(BPoint((fJ + 1) * kPenSize, 0), BPoint((fJ + 1) * kPenSize, fHeight), kBlackColor);
+		view->AddLine(BPoint((fJ + 1) * kPenSize, fHeight - fArr[fJ + 1]), BPoint((fJ + 1) * kPenSize, fHeight), kLightColor);
+		view->EndLineArray();
 		fL = fJ + 1;
 		fK = fArr[fI];
 		fJ = fI - 1;
@@ -371,9 +384,13 @@ void Sort::SelectionSort(BView* view, int32 frame) {
 	}
 
 	if (fJ < fWidth / kPenSize) {
-		if (fL != -1)
-			view->StrokeLine(BPoint(fL * kPenSize, fHeight - fArr[fL]), BPoint(fL * kPenSize, fHeight), B_SOLID_HIGH);
-		view->StrokeLine(BPoint(fJ * kPenSize, fHeight - fArr[fJ]), BPoint(fJ * kPenSize, fHeight), B_MIXED_COLORS);
+		if (fL != -1) {
+			view->BeginLineArray(2);
+			view->AddLine(BPoint(fL * kPenSize, fHeight - fArr[fL]), BPoint(fL * kPenSize, fHeight), kWhiteColor);
+		} else
+			view->BeginLineArray(1);
+		view->AddLine(BPoint(fJ * kPenSize, fHeight - fArr[fJ]), BPoint(fJ * kPenSize, fHeight), kLightColor);
+		view->EndLineArray();
 		fL = fJ;
 		if (fArr[fJ] < fArr[fK])
 			fK = fJ;
@@ -383,10 +400,12 @@ void Sort::SelectionSort(BView* view, int32 frame) {
 		int tmp = fArr[fK];
 		fArr[fK] = fArr[fI];
 		fArr[fI] = tmp;
-		view->StrokeLine(BPoint(fI * kPenSize, 0), BPoint(fI * kPenSize, fHeight), B_SOLID_LOW);
-		view->StrokeLine(BPoint(fI * kPenSize, fHeight - fArr[fI]), BPoint(fI * kPenSize, fHeight), B_SOLID_HIGH);
-		view->StrokeLine(BPoint(fK * kPenSize, 0), BPoint(fK * kPenSize, fHeight), B_SOLID_LOW);
-		view->StrokeLine(BPoint(fK * kPenSize, fHeight - fArr[fK]), BPoint(fK * kPenSize, fHeight), B_SOLID_HIGH);
+		view->BeginLineArray(4);
+		view->AddLine(BPoint(fI * kPenSize, 0), BPoint(fI * kPenSize, fHeight), kBlackColor);
+		view->AddLine(BPoint(fI * kPenSize, fHeight - fArr[fI]), BPoint(fI * kPenSize, fHeight), kWhiteColor);
+		view->AddLine(BPoint(fK * kPenSize, 0), BPoint(fK * kPenSize, fHeight), kBlackColor);
+		view->AddLine(BPoint(fK * kPenSize, fHeight - fArr[fK]), BPoint(fK * kPenSize, fHeight), kWhiteColor);
+		view->EndLineArray();
 		fJ = fI + 1;
 	}
 }
