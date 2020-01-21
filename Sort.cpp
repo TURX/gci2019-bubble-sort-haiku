@@ -186,23 +186,32 @@ void Sort::MessageReceived(BMessage* message)
 {
 	switch (message->what) {
 		case kMsgSetSpeed:
-			fNeedsRestart = true;
 			int speed;
-			if (message->FindInt32("be:value", &speed) == B_OK)
+			if (message->FindInt32("be:value", &speed) == B_OK) {
+				if (fSpeed == speed)
+					return;
 				fSpeed = speed;
+			}
+			fNeedsRestart = true;
 			break;
 		
 		case kMsgSetTypeBubble:
+			if (fType == TYPE_BUBBLE)
+				return;
 			fNeedsRestart = true;
 			fType = TYPE_BUBBLE;
 			break;
 
 		case kMsgSetTypeInsertion:
+			if (fType == TYPE_INSERTION)
+				return;
 			fNeedsRestart = true;
 			fType = TYPE_INSERTION;
 			break;
 
 		case kMsgSetTypeSelection:
+			if (fType == TYPE_SELECTION)
+				return;
 			fNeedsRestart = true;
 			fType = TYPE_SELECTION;
 			break;
@@ -232,8 +241,6 @@ status_t Sort::StartSaver(BView* view, bool prev)
 	view->SetPenSize(kPenSize - 1);
 
 	_Restart(view);
-
-	SetTickSize(100000 / fSpeed); // default: 50000 - 0.05 sec
 
 	return B_OK;
 }
@@ -274,6 +281,8 @@ void Sort::_Restart(BView* view)
 			fJ = 1;
 			break;
 	}
+
+	SetTickSize(100000 / fSpeed); // default: 50000 - 0.05 sec
 
 	fNeedsDraw = true;
 }
